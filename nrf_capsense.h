@@ -5,10 +5,11 @@
 #include <stdbool.h>
 
 #define ROLLING_AVG_FACTOR  2048
-#define DEBOUNCE_ITERATIONS 4
-#define DEBOUNCE_ITER_MASK  0x0F
 
-#define HIGH_AVG_THRESHOLD  8
+#define DEBOUNCE_ITERATIONS 3
+#define DEBOUNCE_ITER_MASK  0x07
+
+#define HIGH_AVG_THRESHOLD  6
 
 #define CAPSENSE_TIMER      NRF_TIMER1
 

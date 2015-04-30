@@ -52,7 +52,7 @@ capsense_channel_t *nrf_capsense_sample(void)
         NRF_LPCOMP->TASKS_START = 1;
         NRF_TIMER1->TASKS_START = 1;
         nrf_gpio_pin_set(m_capsense_channel_list[ch].out_pin);
-        nrf_delay_us(500);
+        nrf_delay_us(100);
         //NRF_GPIOTE->TASKS_OUT[0] = 1;
         nrf_gpio_pin_clear(m_capsense_channel_list[ch].out_pin);
         NRF_TIMER1->TASKS_STOP = 1;
@@ -68,7 +68,7 @@ capsense_channel_t *nrf_capsense_sample(void)
             m_capsense_channel_list[ch].val_min = m_capsense_channel_list[ch].value;
         }
         
-        if(m_capsense_channel_list[ch].average_counter < 1000)
+        if(m_capsense_channel_list[ch].average_counter < 100)
             value_above_threshold = (m_capsense_channel_list[ch].value > m_capsense_channel_list[ch].high_threshold);
         else
             value_above_threshold = (m_capsense_channel_list[ch].value > (m_capsense_channel_list[ch].average + HIGH_AVG_THRESHOLD));
@@ -77,7 +77,7 @@ capsense_channel_t *nrf_capsense_sample(void)
         m_capsense_channel_list[ch].average_counter++;
         m_capsense_channel_list[ch].average_int += m_capsense_channel_list[ch].value;
         m_capsense_channel_list[ch].average = m_capsense_channel_list[ch].average_int / m_capsense_channel_list[ch].average_counter;
-        if(m_capsense_channel_list[ch].average_counter > 100000)
+        if(m_capsense_channel_list[ch].average_counter > 1000)
         {
             m_capsense_channel_list[ch].average_counter /= 2;
             m_capsense_channel_list[ch].average_int /= 2;

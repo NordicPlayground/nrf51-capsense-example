@@ -29,26 +29,28 @@
 #include "nrf_uart_int.h"
 #include "nrf_capsense.h"
 
-#define CAPSENSE_OUT        14
-#define CAPSENSE_IN         1
-#define CAPSENSE_IN_ANA     ANA_AIN2_P01
-
-#define CAPSENSE_OUT2       6
-#define CAPSENSE_IN2        2
-#define CAPSENSE_IN_ANA2    ANA_AIN3_P02
+#define NUM_CHANNELS 4
 
 static void uart_init(void)
 {
-    uart_config_t uart_config = {.pin_txd = 9, .pin_rxd = 11, .pin_rts = 8, .pin_cts = 10, .baudrate = UART_BAUDRATE_38400, .hwfc = 1, .parity = 0};
+    uart_config_t uart_config = {.pin_txd = 9, .pin_rxd = 11, .pin_rts = 8, .pin_cts = 10, .baudrate = UART_BAUDRATE_460800, .hwfc = 1, .parity = 0};
     nrf_uart_init(&uart_config);
 }
 
 static void capsense_init(void)
 {
-    capsense_config_t capsense_config[] = {{CAPSENSE_IN_ANA, CAPSENSE_OUT}, {CAPSENSE_IN_ANA2, CAPSENSE_OUT2}};
-    static capsense_channel_t m_capsense_array[2];                 
-    nrf_capsense_init(m_capsense_array, capsense_config, 2);  
-    //NRF_CAPSENSE_INIT(capsense_config, 2);
+    static capsense_channel_t m_capsense_array[NUM_CHANNELS]; 
+    capsense_config_t capsense_config[] = {{ANA_AIN2_P01, 14}, 
+                                           {ANA_AIN3_P02, 15},
+                                           {ANA_AIN4_P03, 19},
+                                           {ANA_AIN5_P04, 20}};
+    nrf_capsense_init(m_capsense_array, capsense_config, NUM_CHANNELS);  
+    //NRF_CAPSENSE_INIT(capsense_config, NUM_CHANNELS);
+}
+
+static void print_channel(capsense_channel_t *cap_ch)
+{
+    printf("\r%.1f   \t%.1f   \t%.1f  \t%.1f  ", (float)cap_ch->value / 16.0f, (float)(cap_ch->average) / 16.0f, (float)cap_ch->val_min / 16.0f, (float)cap_ch->val_max / 16.0f);
 }
 
 /**
@@ -56,6 +58,7 @@ static void capsense_init(void)
  */
 int main(void)
 {
+    uint32_t output_counter = 0;
     nrf_gpio_range_cfg_output(21,24);
     
     capsense_init();
@@ -63,8 +66,7 @@ int main(void)
     uart_init();
     
     printf("\r\n\nCapSense Test Application\r\n");
-    printf("\r\nVal\tAvg\tMin\tMax\r\n");
- 
+
     while (true)
     { 
         capsense_channel_t *capsense_channels;
@@ -73,12 +75,22 @@ int main(void)
 
         capsense_channels = nrf_capsense_sample();
 
-        printf("\r%.1f   \t%.1f   \t%.1f  \t%.1f  ", (float)capsense_channels[0].value / 16.0f, (float)(capsense_channels[0].average) / 16.0f, (float)capsense_channels[0].val_min / 16.0f, (float)capsense_channels[0].val_max / 16.0f);
-
+        if(output_counter++ > 10)
+        {
+            printf("\r\n\nVal\tAvg\tMin\tMax\r");
+            for(int i = 0; i < NUM_CHANNELS; i++) 
+            {
+                printf("\n");
+                print_channel(&capsense_channels[i]);
+            }
+            output_counter = 0;
+        }
+        
+        
         nrf_gpio_pin_write(21, (capsense_channels[0].pressed ? 0 : 1));
-        nrf_gpio_pin_write(22, (capsense_channels[0].pressed ? 0 : 1));
-        nrf_gpio_pin_write(23, (capsense_channels[1].pressed ? 0 : 1));
-        nrf_gpio_pin_write(24, (capsense_channels[1].pressed ? 0 : 1));
+        nrf_gpio_pin_write(22, (capsense_channels[1].pressed ? 0 : 1));
+        nrf_gpio_pin_write(23, (capsense_channels[2].pressed ? 0 : 1));
+        nrf_gpio_pin_write(24, (capsense_channels[3].pressed ? 0 : 1));
     }
 }
 
